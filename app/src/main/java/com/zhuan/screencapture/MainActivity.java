@@ -30,24 +30,28 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureMana
         manager.stopListen();
     }
 
+    private ScreenshotFloatView view;
+
     @Override
     public void onShot(String imagePath) {
         Log.e("wjc", imagePath);
-        final ScreenshotFloatView view = new ScreenshotFloatView(MainActivity.this);
-//        view.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Toast.makeText(MainActivity.this, "click drag float view", Toast.LENGTH_SHORT).show();
-//                view.destroy();
-//            }
-//        });
+        view = new ScreenshotFloatView(MainActivity.this);
         view.setCaptureFloatClickListener(new ScreenshotFloatView.ICaptureFloatClickListener() {
             @Override
             public void captute(int type) {
                 Toast.makeText(MainActivity.this, "" + type, Toast.LENGTH_SHORT).show();
+                view.destroy();
             }
         });
         view.applyData(imagePath);
         view.create();
+        view.getContentView().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (view != null) {
+                    view.destroy();
+                }
+            }
+        }, 3000);
     }
 }

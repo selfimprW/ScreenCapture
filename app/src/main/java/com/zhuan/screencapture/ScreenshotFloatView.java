@@ -17,8 +17,6 @@ public class ScreenshotFloatView extends DragFloatView<String> implements View.O
 
     public ScreenshotFloatView(Activity activity) {
         super(activity);
-        setDraggable(true);
-        setKeepSide(true);
     }
 
     @Override
@@ -40,31 +38,24 @@ public class ScreenshotFloatView extends DragFloatView<String> implements View.O
         }
     }
 
-    public void applyData(Bitmap source) {
-        if (source != null) {
-            int[] size = generateWindowSize();
-            Bitmap bitmap = Bitmap.createScaledBitmap(source, size[0], size[1], false);
-            imageView.setImageBitmap(bitmap);
-        }
-    }
-
-    @Override
-    protected int[] generateWindowSize() {
-        return new int[]{dp2px(81), dp2px(146)};
-    }
+//    public void applyData(Bitmap source) {
+//        if (source != null) {
+//            int[] size = generateWindowSize();
+//            Bitmap bitmap = Bitmap.createScaledBitmap(source, size[0], size[1], false);
+//            imageView.setImageBitmap(bitmap);
+//        }
+//    }
 
     @Override
     protected WindowManager.LayoutParams generateWindowLayoutParam() {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-        lp.width = getWidth();
-//        lp.height = getHeight();
-//        lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
+        lp.width = dp2px(81);
         lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
         lp.type = WindowManager.LayoutParams.TYPE_APPLICATION;
         lp.format = PixelFormat.RGBA_8888;
         lp.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         lp.gravity = Gravity.LEFT | Gravity.TOP;
-        lp.x = getScreenWidth() - getWidth() - dp2px(10);
+        lp.x = getScreenWidth() - dp2px(81) - dp2px(10);
         lp.y = getScreenHeight() / 4;
         return lp;
     }
