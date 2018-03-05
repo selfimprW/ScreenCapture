@@ -39,6 +39,8 @@ public class ScreenCaptureManager {
             MediaStore.Images.ImageColumns.DATE_TAKEN,
             MediaStore.Images.ImageColumns.WIDTH,
             MediaStore.Images.ImageColumns.HEIGHT,
+            MediaStore.Images.Media.DISPLAY_NAME,
+            MediaStore.Images.Media.DATE_ADDED
     };
 
     /**
@@ -47,7 +49,7 @@ public class ScreenCaptureManager {
     private static final String[] KEYWORDS = {
             "screenshot", "screen_shot", "screen-shot", "screen shot",
             "screencapture", "screen_capture", "screen-capture", "screen capture",
-            "screencap", "screen_cap", "screen-cap", "screen cap"
+            "screencap", "screen_cap", "screen-cap", "screen cap", "截屏", "截图"
     };
 
     private static Point sScreenRealSize;
@@ -66,12 +68,7 @@ public class ScreenCaptureManager {
     /**
      * 内部存储器内容观察者
      */
-    private MediaContentObserver mInternalObserver;
-
-    /**
-     * 外部存储器内容观察者
-     */
-    private MediaContentObserver mExternalObserver;
+    private MediaContentObserver mediaContentObserver;
 
     /**
      * 运行在 UI 线程的 Handler, 用于运行监听器回调
@@ -100,6 +97,11 @@ public class ScreenCaptureManager {
         }
     }
 
+    private static final String EXTERNAL_CONTENT_URI_MATCHER =
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString();
+    private static final String INTERNAL_CONTENT_URI_MATCHER =
+            MediaStore.Images.Media.INTERNAL_CONTENT_URI.toString();
+
     /**
      * 启动监听
      */
@@ -112,19 +114,19 @@ public class ScreenCaptureManager {
         mStartListenTime = System.currentTimeMillis();
 
         // 创建内容观察者
-        mInternalObserver = new MediaContentObserver(MediaStore.Images.Media.INTERNAL_CONTENT_URI, mUiHandler);
-        mExternalObserver = new MediaContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mUiHandler);
+        mediaContentObserver = new MediaContentObserver( mUiHandler);//MediaStore.Images.Media.INTERNAL_CONTENT_URI,
+//        mExternalObserver = new MediaContentObserver( mUiHandler); //MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
 
         // 注册内容观察者
         mContext.getContentResolver().registerContentObserver(
                 MediaStore.Images.Media.INTERNAL_CONTENT_URI,
                 false,
-                mInternalObserver
+                mediaContentObserver
         );
         mContext.getContentResolver().registerContentObserver(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 false,
-                mExternalObserver
+                mediaContentObserver
         );
     }
 
@@ -135,21 +137,13 @@ public class ScreenCaptureManager {
         assertInMainThread();
 
         // 注销内容观察者
-        if (mInternalObserver != null) {
+        if (mediaContentObserver != null) {
             try {
-                mContext.getContentResolver().unregisterContentObserver(mInternalObserver);
+                mContext.getContentResolver().unregisterContentObserver(mediaContentObserver);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            mInternalObserver = null;
-        }
-        if (mExternalObserver != null) {
-            try {
-                mContext.getContentResolver().unregisterContentObserver(mExternalObserver);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            mExternalObserver = null;
+            mediaContentObserver = null;
         }
 
         // 清空数据
@@ -157,65 +151,6 @@ public class ScreenCaptureManager {
         sHasCallbackPaths.clear();
     }
 
-    /**
-     * 处理媒体数据库的内容改变
-     */
-    private void handleMediaContentChange(Uri contentUri) {
-        Cursor cursor = null;
-        try {
-            // 数据改变时查询数据库中最后加入的一条数据
-            cursor = mContext.getContentResolver().query(
-                    contentUri,
-                    MEDIA_PROJECTIONS_API,
-                    null,
-                    null,
-                    MediaStore.Images.ImageColumns.DATE_ADDED + " desc limit 1"
-            );
-
-            if (cursor == null) {
-                Log.e(TAG, "Deviant logic.");
-                return;
-            }
-            if (!cursor.moveToFirst()) {
-                Log.d(TAG, "Cursor no data.");
-                return;
-            }
-
-            // 获取各列的索引
-            int dataIndex = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-            int dateTakenIndex = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATE_TAKEN);
-            int widthIndex = -1;
-            int heightIndex = -1;
-            if (Build.VERSION.SDK_INT >= 16) {
-                widthIndex = cursor.getColumnIndex(MediaStore.Images.ImageColumns.WIDTH);
-                heightIndex = cursor.getColumnIndex(MediaStore.Images.ImageColumns.HEIGHT);
-            }
-
-            // 获取行数据
-            String data = cursor.getString(dataIndex);
-            long dateTaken = cursor.getLong(dateTakenIndex);
-            int width = 0;
-            int height = 0;
-            if (widthIndex >= 0 && heightIndex >= 0) {
-                width = cursor.getInt(widthIndex);
-                height = cursor.getInt(heightIndex);
-            } else {// API 16 之前, 宽高要手动获取
-                Point size = getImageSize(data);
-                width = size.x;
-                height = size.y;
-            }
-
-            // 处理获取到的第一行数据
-            handleMediaRowData(data, dateTaken, width, height);
-        } catch (Exception e) {
-            e.printStackTrace();
-
-        } finally {
-            if (cursor != null && !cursor.isClosed()) {
-                cursor.close();
-            }
-        }
-    }
 
     private Point getImageSize(String imagePath) {
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -263,7 +198,7 @@ public class ScreenCaptureManager {
         data = data.toLowerCase();
         // 判断图片路径是否含有指定的关键字之一, 如果有, 则认为当前截屏了
         for (String keyWork : KEYWORDS) {
-            if (data.contains(keyWork)) {
+            if (data.toLowerCase().contains(keyWork)) {
                 return true;
             }
         }
@@ -309,23 +244,95 @@ public class ScreenCaptureManager {
             throw new IllegalStateException("Call the method must be in main thread: " + methodMsg);
         }
     }
+    private static final String SORT_ORDER = MediaStore.Images.Media.DATE_ADDED + " DESC";
+
+    /**
+     * 处理媒体数据库的内容改变
+     */
+    private void handleMediaContentChange(Uri contentUri) {
+        Cursor cursor = null;
+        try {
+            // 数据改变时查询数据库中最后加入的一条数据
+            cursor = mContext.getContentResolver().query(
+                    contentUri,
+                    MEDIA_PROJECTIONS_API,
+                    null,
+                    null,
+                    MediaStore.Images.ImageColumns.DATE_ADDED + " desc limit 1"
+            );
+
+            if (cursor == null) {
+                Log.e(TAG, "Deviant logic.");
+                return;
+            }
+            if (!cursor.moveToFirst()) {
+                Log.d(TAG, "Cursor no data.");
+                return;
+            }
+
+            // 获取各列的索引
+            int dataIndex = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            int dateTakenIndex = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATE_TAKEN);
+            int widthIndex = -1;
+            int heightIndex = -1;
+            if (Build.VERSION.SDK_INT >= 16) {
+                widthIndex = cursor.getColumnIndex(MediaStore.Images.ImageColumns.WIDTH);
+                heightIndex = cursor.getColumnIndex(MediaStore.Images.ImageColumns.HEIGHT);
+            }
+
+            long dateAdded = cursor.getLong(cursor.getColumnIndex(
+                    MediaStore.Images.Media.DATE_ADDED));
+            // 获取行数据
+            String data = cursor.getString(dataIndex);
+            long dateTaken = cursor.getLong(dateTakenIndex);
+            int width = 0;
+            int height = 0;
+            if (widthIndex >= 0 && heightIndex >= 0) {
+                width = cursor.getInt(widthIndex);
+                height = cursor.getInt(heightIndex);
+            } else {// API 16 之前, 宽高要手动获取
+                Point size = getImageSize(data);
+                width = size.x;
+                height = size.y;
+            }
+
+            // 处理获取到的第一行数据
+            handleMediaRowData(data, dateTaken, width, height);
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+    }
 
     /**
      * 媒体内容观察者(观察媒体数据库的改变)
      */
     private class MediaContentObserver extends ContentObserver {
 
-        private Uri mContentUri;
 
-        public MediaContentObserver(Uri contentUri, Handler handler) {
+        public MediaContentObserver( Handler handler) {
             super(handler);
-            mContentUri = contentUri;
         }
 
         @Override
         public void onChange(boolean selfChange) {
             super.onChange(selfChange);
-            handleMediaContentChange(mContentUri);
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            Log.d(TAG, "onChange: " + selfChange + ", " + uri.toString());
+            if (uri.toString().startsWith(EXTERNAL_CONTENT_URI_MATCHER) || uri.toString().startsWith(INTERNAL_CONTENT_URI_MATCHER)) {
+                handleMediaContentChange(uri);
+            }
+            super.onChange(selfChange, uri);
         }
     }
+
+
+
 }

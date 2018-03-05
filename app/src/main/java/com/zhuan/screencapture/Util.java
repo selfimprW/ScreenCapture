@@ -1,8 +1,11 @@
 package com.zhuan.screencapture;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Point;
 import android.os.Build;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 

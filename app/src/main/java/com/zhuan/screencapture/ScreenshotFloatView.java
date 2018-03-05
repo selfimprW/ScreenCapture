@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,15 +12,35 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 
 
-public class ScreenshotFloatView extends DragFloatView<String> implements View.OnClickListener {
+public class ScreenshotFloatView implements View.OnClickListener {
+
+    private Activity mActivity;
+
+    private WindowManager mWindowManager;
+    private WindowManager.LayoutParams mLayoutParam;
+    private DisplayMetrics dm;
+
+    private View mContentView;
+
+    private int mScreenWidth;
+    private int mScreenHeight;
+
+    private boolean isAdded = false;
 
     private ImageView imageView;
 
     public ScreenshotFloatView(Activity activity) {
-        super(activity);
+        mActivity = activity;
+
+        dm = activity.getResources().getDisplayMetrics();
+        mScreenWidth = dm.widthPixels;
+        mScreenHeight = dm.heightPixels;
+        mContentView = onCreateView();
+        if (mContentView == null) {
+            throw new IllegalArgumentException("No content view was found!");
+        }
     }
 
-    @Override
     protected View onCreateView() {
         View contentView = LayoutInflater.from(getActivity()).inflate(R.layout.layout_float_view, null);
         imageView = contentView.findViewById(R.id.image);
@@ -28,7 +49,6 @@ public class ScreenshotFloatView extends DragFloatView<String> implements View.O
         return contentView;
     }
 
-    @Override
     public void applyData(String data) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = 8;
@@ -46,8 +66,7 @@ public class ScreenshotFloatView extends DragFloatView<String> implements View.O
 //        }
 //    }
 
-    @Override
-    protected WindowManager.LayoutParams generateWindowLayoutParam() {
+    private WindowManager.LayoutParams generateWindowLayoutParam() {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
         lp.width = dp2px(81);
         lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
@@ -69,9 +88,53 @@ public class ScreenshotFloatView extends DragFloatView<String> implements View.O
         }
     }
 
+
+    public Activity getActivity() {
+        return mActivity;
+    }
+
+    public int getScreenWidth() {
+        return mScreenWidth;
+    }
+
+    public int getScreenHeight() {
+        return mScreenHeight;
+    }
+
+
+    public void create() {
+        if (!isAdded) {
+            WindowManager wm = mActivity.getWindowManager();
+            WindowManager.LayoutParams lp = generateWindowLayoutParam();
+            mWindowManager = wm;
+            mLayoutParam = lp;
+            mWindowManager.addView(mContentView, mLayoutParam);
+            isAdded = true;
+        }
+    }
+
+    public void destroy() {
+        if (isAdded) {
+            mWindowManager.removeView(mContentView);
+            mWindowManager = null;
+            mLayoutParam = null;
+            mActivity = null;
+            isAdded = false;
+        }
+    }
+
+    public boolean isAdded() {
+        return isAdded;
+    }
+
+    public int dp2px(float dp) {
+        return (int) (dm.density * dp + 0.5f);
+    }
+
     public interface ICaptureFloatClickListener {
         void captute(int type);
     }
+
     private ICaptureFloatClickListener captureFloatClickListener;
 
     public void setCaptureFloatClickListener(ICaptureFloatClickListener captureFloatClickListener) {
