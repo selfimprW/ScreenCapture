@@ -35,21 +35,20 @@ public class ScreenCaptureManager {
      * 读取媒体数据库时需要读取的列, 其中 WIDTH 和 HEIGHT 字段在 API 16 以后才有
      */
     private static final String[] MEDIA_PROJECTIONS_API = {
-            MediaStore.Images.ImageColumns.DATA,
-            MediaStore.Images.ImageColumns.DATE_TAKEN,
-            MediaStore.Images.ImageColumns.WIDTH,
-            MediaStore.Images.ImageColumns.HEIGHT,
-            MediaStore.Images.Media.DISPLAY_NAME,
-            MediaStore.Images.Media.DATE_ADDED
+            MediaStore.Images.ImageColumns.DATA, //Path to the file on disk.
+            MediaStore.Images.ImageColumns.DATE_TAKEN, // The date & time that the image was taken in units of milliseconds since jan 1, 1970.
+            MediaStore.Images.ImageColumns.WIDTH, //The width of the image/video in pixels.
+            MediaStore.Images.ImageColumns.HEIGHT, //The height of the image/video in pixels.
+            MediaStore.Images.Media.DISPLAY_NAME, //The display name of the file
+//            MediaStore.Images.Media.DATE_ADDED //The time the file was added to the media provider  Units are seconds since 1970.
     };
 
     /**
      * 截屏依据中的路径判断关键字
      */
     private static final String[] KEYWORDS = {
-            "screenshot", "screen_shot", "screen-shot", "screen shot",
-            "screencapture", "screen_capture", "screen-capture", "screen capture",
-            "screencap", "screen_cap", "screen-cap", "screen cap", "截屏", "截图"
+            "screenshot", "screen_shot", "screen-shot",
+            "screencapture", "screen_capture", "screen-capture", "截屏", "截图"
     };
 
     private static Point sScreenRealSize;
@@ -114,7 +113,7 @@ public class ScreenCaptureManager {
         mStartListenTime = System.currentTimeMillis();
 
         // 创建内容观察者
-        mediaContentObserver = new MediaContentObserver( mUiHandler);//MediaStore.Images.Media.INTERNAL_CONTENT_URI,
+        mediaContentObserver = new MediaContentObserver(mUiHandler);//MediaStore.Images.Media.INTERNAL_CONTENT_URI,
 //        mExternalObserver = new MediaContentObserver( mUiHandler); //MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
 
         // 注册内容观察者
@@ -244,6 +243,7 @@ public class ScreenCaptureManager {
             throw new IllegalStateException("Call the method must be in main thread: " + methodMsg);
         }
     }
+
     private static final String SORT_ORDER = MediaStore.Images.Media.DATE_ADDED + " DESC";
 
     /**
@@ -280,8 +280,7 @@ public class ScreenCaptureManager {
                 heightIndex = cursor.getColumnIndex(MediaStore.Images.ImageColumns.HEIGHT);
             }
 
-            long dateAdded = cursor.getLong(cursor.getColumnIndex(
-                    MediaStore.Images.Media.DATE_ADDED));
+//            long dateAdded = cursor.getLong(cursor.getColumnIndex(MediaStore.Images.Media.DATE_ADDED));
             // 获取行数据
             String data = cursor.getString(dataIndex);
             long dateTaken = cursor.getLong(dateTakenIndex);
@@ -314,7 +313,7 @@ public class ScreenCaptureManager {
     private class MediaContentObserver extends ContentObserver {
 
 
-        public MediaContentObserver( Handler handler) {
+        public MediaContentObserver(Handler handler) {
             super(handler);
         }
 
@@ -332,7 +331,6 @@ public class ScreenCaptureManager {
             super.onChange(selfChange, uri);
         }
     }
-
 
 
 }
