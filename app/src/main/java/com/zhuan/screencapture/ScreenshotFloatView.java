@@ -1,9 +1,9 @@
 package com.zhuan.screencapture;
 
-import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
+import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -14,11 +14,11 @@ import android.widget.ImageView;
 
 public class ScreenshotFloatView implements View.OnClickListener {
 
-    private Activity mActivity;
+    private FragmentActivity activity;
 
     private WindowManager mWindowManager;
     private WindowManager.LayoutParams mLayoutParam;
-    private DisplayMetrics dm;
+    private DisplayMetrics displayMetrics;
 
     private View mContentView;
 
@@ -29,12 +29,12 @@ public class ScreenshotFloatView implements View.OnClickListener {
 
     private ImageView imageView;
 
-    public ScreenshotFloatView(Activity activity) {
-        mActivity = activity;
+    public ScreenshotFloatView(FragmentActivity activity) {
+        this.activity = activity;
 
-        dm = activity.getResources().getDisplayMetrics();
-        mScreenWidth = dm.widthPixels;
-        mScreenHeight = dm.heightPixels;
+        displayMetrics = activity.getResources().getDisplayMetrics();
+        mScreenWidth = displayMetrics.widthPixels;
+        mScreenHeight = displayMetrics.heightPixels;
         mContentView = onCreateView();
         if (mContentView == null) {
             throw new IllegalArgumentException("No content view was found!");
@@ -82,15 +82,14 @@ public class ScreenshotFloatView implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.feed_back) {
-            captureFloatClickListener.captute(1);
+            captureFloatClickListener.capture(1);
         } else if (v.getId() == R.id.share_page) {
-            captureFloatClickListener.captute(2);
+            captureFloatClickListener.capture(2);
         }
     }
 
-
-    public Activity getActivity() {
-        return mActivity;
+    public FragmentActivity getActivity() {
+        return activity;
     }
 
     public int getScreenWidth() {
@@ -104,7 +103,7 @@ public class ScreenshotFloatView implements View.OnClickListener {
 
     public void create() {
         if (!isAdded) {
-            WindowManager wm = mActivity.getWindowManager();
+            WindowManager wm = activity.getWindowManager();
             WindowManager.LayoutParams lp = generateWindowLayoutParam();
             mWindowManager = wm;
             mLayoutParam = lp;
@@ -118,7 +117,7 @@ public class ScreenshotFloatView implements View.OnClickListener {
             mWindowManager.removeView(mContentView);
             mWindowManager = null;
             mLayoutParam = null;
-            mActivity = null;
+            activity = null;
             isAdded = false;
         }
     }
@@ -128,11 +127,11 @@ public class ScreenshotFloatView implements View.OnClickListener {
     }
 
     public int dp2px(float dp) {
-        return (int) (dm.density * dp + 0.5f);
+        return (int) (displayMetrics.density * dp + 0.5f);
     }
 
     public interface ICaptureFloatClickListener {
-        void captute(int type);
+        void capture(int type);
     }
 
     private ICaptureFloatClickListener captureFloatClickListener;

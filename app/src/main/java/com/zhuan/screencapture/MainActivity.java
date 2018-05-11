@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureMana
         view = new ScreenshotFloatView(MainActivity.this);
         view.setCaptureFloatClickListener(new ScreenshotFloatView.ICaptureFloatClickListener() {
             @Override
-            public void captute(int type) {
+            public void capture(int type) {
                 Toast.makeText(MainActivity.this, "" + type, Toast.LENGTH_SHORT).show();
                 view.destroy();
             }
