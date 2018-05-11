@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -74,9 +76,9 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureMana
     private ScreenshotFloatView view;
 
     @Override
-    public void onShot(String imagePath) {
+    public void onShowScreenShot(String imagePath) {
         Log.e("wjc", imagePath);
-        view = new ScreenshotFloatView(MainActivity.this);
+        view = new ScreenshotFloatView(this);
         view.setCaptureFloatClickListener(new ScreenshotFloatView.ICaptureFloatClickListener() {
             @Override
             public void capture(int type) {
@@ -86,13 +88,13 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureMana
         });
         view.applyData(imagePath);
         view.create();
-//        view.getContentView().postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                if (view != null) {
-//                    view.destroy();
-//                }
-//            }
-//        }, 3000);
+        new Handler(getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (view != null) {
+                    view.destroy();
+                }
+            }
+        }, 3000);
     }
 }

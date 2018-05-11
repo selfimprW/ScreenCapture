@@ -135,8 +135,7 @@ public class ScreenCaptureManager {
     public void stopListen() {
         assertInMainThread();
 
-        // 注销内容观察者
-        if (mediaContentObserver != null) {
+        if (mediaContentObserver != null) {  // 注销内容观察者
             try {
                 mContext.getContentResolver().unregisterContentObserver(mediaContentObserver);
             } catch (Exception e) {
@@ -165,7 +164,7 @@ public class ScreenCaptureManager {
         if (checkScreenShot(data, dateTaken, width, height)) {
             Log.d(TAG, "ScreenShot: path = " + data + "; size = " + width + " * " + height + "; date = " + dateTaken);
             if (screenShotListener != null && !checkCallback(data)) {
-                screenShotListener.onShot(data);
+                screenShotListener.onShowScreenShot(data);
             }
         } else {
             // 如果在观察区间媒体数据库有数据改变，又不符合截屏规则，则输出到 log 待分析
@@ -230,7 +229,7 @@ public class ScreenCaptureManager {
     }
 
     public interface OnScreenShotListener {
-        void onShot(String imagePath);
+        void onShowScreenShot(String imagePath);
     }
 
     private static void assertInMainThread() {
