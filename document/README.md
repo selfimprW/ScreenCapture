@@ -3,4 +3,4 @@
 
 ### 效果图如下：
 
-![](/document/demo截图.jpg "截屏监听")
+![截屏监听](/document/demo截图.jpg "截屏监听")
