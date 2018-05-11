@@ -1,4 +1,4 @@
-package com.zhuan.screencapture;
+package com.selfimpr.screencapture;
 
 import android.content.Context;
 import android.database.ContentObserver;
@@ -87,7 +87,7 @@ public class ScreenCaptureManager {
 
         // 获取屏幕真实的分辨率
         if (sScreenRealSize == null) {
-            sScreenRealSize = Util.getRealScreenSize(mContext);
+            sScreenRealSize = ScreenUtil.getRealScreenSize(mContext);
             if (sScreenRealSize != null) {
                 Log.d(TAG, "Screen Real Size: " + sScreenRealSize.x + " * " + sScreenRealSize.y);
             } else {

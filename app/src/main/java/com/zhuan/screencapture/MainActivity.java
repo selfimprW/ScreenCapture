@@ -1,28 +1,26 @@
 package com.zhuan.screencapture;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
-import java.security.Permission;
-import java.security.Permissions;
+import com.selfimpr.screencapture.ScreenCaptureManager;
+import com.selfimpr.screencapture.ScreenshotFloatView;
 
 import static android.support.v4.content.PermissionChecker.PERMISSION_GRANTED;
 
 public class MainActivity extends AppCompatActivity implements ScreenCaptureManager.OnScreenShotListener {
-    ScreenCaptureManager manager;
+
+    private ScreenCaptureManager manager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +75,6 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureMana
 
     @Override
     public void onShowScreenShot(String imagePath) {
-        Log.e("wjc", imagePath);
         view = new ScreenshotFloatView(this);
         view.setCaptureFloatClickListener(new ScreenshotFloatView.ICaptureFloatClickListener() {
             @Override

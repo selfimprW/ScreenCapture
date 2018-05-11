@@ -1,4 +1,4 @@
-package com.zhuan.screencapture;
+package com.selfimpr.screencapture;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

@@ -1,11 +1,8 @@
-package com.zhuan.screencapture;
+package com.selfimpr.screencapture;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Point;
 import android.os.Build;
-import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
@@ -21,7 +18,7 @@ import java.lang.reflect.Method;
  * Modifier：  <br/>
  * Modify time：  <br/>
  */
-public class Util {
+public class ScreenUtil {
     /**
      * 获取屏幕分辨率
      */
