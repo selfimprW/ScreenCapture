@@ -331,6 +331,4 @@ public class ScreenCaptureManager {
             super.onChange(selfChange, uri);
         }
     }
-
-
 }

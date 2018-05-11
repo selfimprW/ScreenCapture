@@ -14,27 +14,44 @@ import android.widget.ImageView;
 
 public class ScreenshotFloatView implements View.OnClickListener {
 
+    /**
+     * 悬浮框宽度
+     */
+    private static final int FLOAT_WIDTH_DP = 90;
+    /**
+     * 图片高度
+     */
+    private static final int IMAGE_HEIGHT_DP = 65;
+    /**
+     * 按钮高度
+     */
+    private static final int BUTTON_HEIGHT_DP = 35;
+    /**
+     * 悬浮框右间距
+     */
+    private static final int FLOAT_MARGIN_RIGHT = 20;
+
     private FragmentActivity activity;
 
     private WindowManager mWindowManager;
-    private WindowManager.LayoutParams mLayoutParam;
     private DisplayMetrics displayMetrics;
 
     private View mContentView;
 
-    private int mScreenWidth;
-    private int mScreenHeight;
+    private int screenWidth;
+    private int screenHeight;
 
-    private boolean isAdded = false;
+    private boolean isShow = false;
 
     private ImageView imageView;
+    private Bitmap thumpBitmap;
 
     public ScreenshotFloatView(FragmentActivity activity) {
         this.activity = activity;
 
         displayMetrics = activity.getResources().getDisplayMetrics();
-        mScreenWidth = displayMetrics.widthPixels;
-        mScreenHeight = displayMetrics.heightPixels;
+        screenWidth = displayMetrics.widthPixels;
+        screenHeight = displayMetrics.heightPixels;
         mContentView = onCreateView();
         if (mContentView == null) {
             throw new IllegalArgumentException("No content view was found!");
@@ -42,40 +59,41 @@ public class ScreenshotFloatView implements View.OnClickListener {
     }
 
     protected View onCreateView() {
-        View contentView = LayoutInflater.from(getActivity()).inflate(R.layout.layout_float_view, null);
+        View contentView = LayoutInflater.from(activity).inflate(R.layout.layout_float_view, null);
         imageView = contentView.findViewById(R.id.image);
         contentView.findViewById(R.id.feed_back).setOnClickListener(this);
         contentView.findViewById(R.id.share_page).setOnClickListener(this);
         return contentView;
     }
 
+
     public void applyData(String data) {
         BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = 8;
-        Bitmap bitmap = BitmapFactory.decodeFile(data);
+        options.inSampleSize = 4;
+        options.inPreferredConfig = Bitmap.Config.RGB_565;    // 默认是Bitmap.Config.ARGB_8888
+//        options.inJustDecodeBounds = true;//这个参数设置为true才有效后，获取的bitmap是null
+        Bitmap bitmap = BitmapFactory.decodeFile(data, options);
         if (bitmap != null) {
-            imageView.setImageBitmap(bitmap);
+            int bitmapWidth = bitmap.getWidth();
+            int bitmapHeight = (int) (bitmapWidth * dp2px(IMAGE_HEIGHT_DP) / dp2px(FLOAT_WIDTH_DP) * 1.0f);
+            thumpBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmapWidth, bitmapHeight);
+            imageView.setImageBitmap(thumpBitmap);
+            mContentView.setVisibility(View.VISIBLE);
+        } else {
+            mContentView.setVisibility(View.GONE);
         }
     }
 
-//    public void applyData(Bitmap source) {
-//        if (source != null) {
-//            int[] size = generateWindowSize();
-//            Bitmap bitmap = Bitmap.createScaledBitmap(source, size[0], size[1], false);
-//            imageView.setImageBitmap(bitmap);
-//        }
-//    }
-
     private WindowManager.LayoutParams generateWindowLayoutParam() {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-        lp.width = dp2px(81);
+        lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
         lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
         lp.type = WindowManager.LayoutParams.TYPE_APPLICATION;
         lp.format = PixelFormat.RGBA_8888;
         lp.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         lp.gravity = Gravity.LEFT | Gravity.TOP;
-        lp.x = getScreenWidth() - dp2px(81) - dp2px(10);
-        lp.y = getScreenHeight() / 4;
+        lp.x = screenWidth - dp2px(FLOAT_WIDTH_DP) - dp2px(FLOAT_MARGIN_RIGHT);
+        lp.y = screenHeight / 4;
         return lp;
     }
 
@@ -88,42 +106,32 @@ public class ScreenshotFloatView implements View.OnClickListener {
         }
     }
 
-    public FragmentActivity getActivity() {
-        return activity;
-    }
-
-    public int getScreenWidth() {
-        return mScreenWidth;
-    }
-
-    public int getScreenHeight() {
-        return mScreenHeight;
-    }
-
-
     public void create() {
-        if (!isAdded) {
+        if (!isShow) {
             WindowManager wm = activity.getWindowManager();
             WindowManager.LayoutParams lp = generateWindowLayoutParam();
             mWindowManager = wm;
-            mLayoutParam = lp;
-            mWindowManager.addView(mContentView, mLayoutParam);
-            isAdded = true;
+            mWindowManager.addView(mContentView, lp);
+            isShow = true;
         }
     }
 
     public void destroy() {
-        if (isAdded) {
+        if (isShow) {
+            imageView.setImageBitmap(null);
             mWindowManager.removeView(mContentView);
             mWindowManager = null;
-            mLayoutParam = null;
             activity = null;
-            isAdded = false;
+            if (thumpBitmap != null) {
+                thumpBitmap.recycle();
+                thumpBitmap = null;
+            }
+            isShow = false;
         }
     }
 
-    public boolean isAdded() {
-        return isAdded;
+    public boolean isShow() {
+        return isShow;
     }
 
     public int dp2px(float dp) {

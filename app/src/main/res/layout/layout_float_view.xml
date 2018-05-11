@@ -1,34 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="81dp"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="#000000"
-    android:orientation="vertical"
-    android:paddingBottom="3dp"
-    android:paddingLeft="3dp"
-    android:paddingRight="3dp"
-    android:paddingTop="3dp">
+    android:padding="2dp"
+    android:orientation="vertical">
 
     <ImageView
         android:id="@+id/image"
-        android:layout_width="match_parent"
-        android:layout_height="115dp"
+        android:layout_width="90dp"
+        android:layout_height="60dp"
         android:scaleType="fitXY"
         android:src="@mipmap/ic_launcher" />
 
     <TextView
         android:id="@+id/feed_back"
-        android:layout_width="match_parent"
-        android:layout_height="25dp"
+        android:layout_width="90dp"
+        android:layout_height="35dp"
         android:gravity="center"
         android:text="反馈问题"
         android:textColor="#ffffff"
         android:textSize="12dp" />
 
+    <View
+        android:layout_width="90dp"
+        android:layout_height="1px"
+        android:background="@android:color/white" />
+
     <TextView
         android:id="@+id/share_page"
-        android:layout_width="match_parent"
-        android:layout_height="25dp"
+        android:layout_width="90dp"
+        android:layout_height="35dp"
         android:gravity="center"
         android:text="分享界面"
         android:textColor="#ffffff"
